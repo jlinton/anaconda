@@ -20,6 +20,7 @@ import re
 
 from pyanaconda.modules.storage.bootloader.base import BootLoaderError
 from pyanaconda.modules.storage.bootloader.grub2 import GRUB2
+from pyanaconda.modules.storage.bootloader.systemd import SYSTEMD
 from pyanaconda.core import util
 from pyanaconda.core.kernel import kernel_arguments
 from pyanaconda.core.configuration.anaconda import conf
@@ -28,7 +29,7 @@ from pyanaconda.product import productName
 from pyanaconda.anaconda_loggers import get_module_logger
 log = get_module_logger(__name__)
 
-__all__ = ["EFIBase", "EFIGRUB", "Aarch64EFIGRUB", "ArmEFIGRUB", "MacEFIGRUB"]
+__all__ = ["EFIBase", "EFIGRUB", "Aarch64EFIGRUB", "ArmEFIGRUB", "MacEFIGRUB", "Aarch64EFISystemdBoot"]
 
 
 class EFIBase(object):
@@ -194,6 +195,60 @@ class EFIGRUB(EFIBase, GRUB2):
 
         super().write_config()
 
+class EFISYSTEMD(EFIBase, SYSTEMD):
+    """EFI Systemd-boot"""
+    _packages_common = [ "efibootmgr", "systemd-udev", "stubby"]
+    _is_32bit_firmware = False
+
+    def __init__(self):
+        super().__init__()
+
+        try:
+            f = open("/sys/firmware/efi/fw_platform_size", "r")
+            value = f.readline().strip()
+        except OSError:
+            log.info("efi.py: Reading /sys/firmware/efi/fw_platform_size failed, "
+                     "defaulting to 64-bit install.")
+            value = '64'
+        if value == '32':
+            # not supported try a diff bootloader
+            log.info("efi.py: systemd-boot not supported on 32-bit platform")
+
+            self._is_32bit_firmware = True
+
+    @property
+    def _efi_binary(self):
+        return self._efi_binary
+
+    @property
+    def packages(self):
+        return self._packages64 + self._packages_common
+
+    @property
+    def efi_config_file(self):
+        """ Full path to EFI configuration file. """
+        return "%s/%s" % (self.efi_config_dir, self._config_file)
+
+    def write_config(self):
+        """ Write the config settings to config file (ex: grub.cfg) not needed for systemd. """
+        config_path = "%s%s" % (conf.target.system_root, self.efi_config_file)
+
+        log.info("efi.py: (systemd) write_config systemd : %s ", config_path)
+
+        super().write_config()
+
+    def install(self, args=None):
+        log.info("efi.py: (systemd) install")
+
+        # force the resolution order, we want to:
+        #   efibootmgr remove old "fedora"
+        #   bootctl install (with new systemd --title= option)
+        self.installbootmgr()
+
+
+        # super().install()
+        # SYSTEMD.install(self)
+        # EFIBase.install(self)
 
 class Aarch64EFIGRUB(EFIGRUB):
     _serial_consoles = ["ttyAMA", "ttyS"]
@@ -202,6 +257,19 @@ class Aarch64EFIGRUB(EFIGRUB):
     def __init__(self):
         super().__init__()
         self._packages64 = ["grub2-efi-aa64", "shim-aa64"]
+
+
+class Aarch64EFISystemdBoot(EFISYSTEMD):
+    _serial_consoles = ["ttyAMA", "ttyS"]
+    _efi_binary = "\\systemd-bootaa64.efi"
+
+    def __init__(self):
+        super().__init__()
+        # we can't yet add shim-aa64 to list list because it pulls in grub2-efi-aa64, which breaks install-kernel
+        # and in the end I don't think we really want shim anymore
+        # we need to start enrolling the keys in the db
+        #self._packages64 = ["shim-aa64"]
+        self._packages64 = []
 
 
 class ArmEFIGRUB(EFIGRUB):
