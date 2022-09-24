@@ -159,9 +159,14 @@ class CreateBLSEntriesTask(Task):
 
     def run(self):
         """Run the task."""
+        log.info("create_bls_entries task")
+
+        # allow for systemd boots
         if self._payload_type not in PAYLOAD_LIVE_TYPES:
             log.debug("Only live payloads require this fix.")
             return
+
+        # do something systemd here?
 
         create_bls_entries(
             sysroot=self._sysroot,
@@ -193,10 +198,13 @@ class RecreateInitrdsTask(Task):
             log.debug("Don't regenerate initramfs on rpm-ostree systems.")
             return
 
-        recreate_initrds(
-            sysroot=self._sysroot,
-            kernel_versions=self._versions
-        )
+#        if self._payload_type == PAYLOAD_TYPE_SYSTEMD
+        log.debug("Don't regenerate initramfs on systemd systems.")
+
+#        recreate_initrds(
+#            sysroot=self._sysroot,
+#            kernel_versions=self._versions
+#        )
 
 
 class FixBTRFSBootloaderTask(Task):
