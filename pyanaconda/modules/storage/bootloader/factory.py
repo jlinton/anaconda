@@ -135,8 +135,11 @@ class BootLoaderFactory(object):
             return ZIPL
 
         if platform_class is platform.Aarch64EFI:
-            from pyanaconda.modules.storage.bootloader.efi import Aarch64EFIGRUB
-            return Aarch64EFIGRUB
+#            from pyanaconda.modules.storage.bootloader.efi import Aarch64EFIGRUB
+#            return Aarch64EFIGRUB
+            from pyanaconda.modules.storage.bootloader.efi import Aarch64EFISystemdBoot
+            return Aarch64EFISystemdBoot
+
 
         if platform_class is platform.ARM:
             from pyanaconda.modules.storage.bootloader.extlinux import EXTLINUX
