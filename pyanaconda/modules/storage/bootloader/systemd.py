@@ -254,7 +254,7 @@ class SYSTEMD(BootLoader):
 
         log.info("systemd.py: install systemd boot install (root=%s)", conf.target.system_root)
 
-        rc = util.execWithRedirect("bootctl", [ "install", "--esp-path=/boot/efi" ],
+        rc = util.execWithRedirect("bootctl", [ "install", "--esp-path=/boot/efi", "--efi-boot-option-description=fedora", "--loader-path=EFI/fedora" ],
                                    root=conf.target.system_root,
                                    env_prune=['MALLOC_PERTURB_'])
         if rc:
