@@ -21,7 +21,8 @@ from blivet import arch
 from blivet.devices import BTRFSDevice
 from pyanaconda.core.constants import PAYLOAD_TYPE_RPM_OSTREE, PAYLOAD_LIVE_TYPES
 from pyanaconda.modules.storage.bootloader import BootLoaderError
-
+from pyanaconda.core.configuration.anaconda import conf
+from pyanaconda.core.configuration.bootloader import BootloaderType
 from pyanaconda.core.util import execWithRedirect
 from pyanaconda.modules.common.errors.installation import BootloaderInstallationError
 from pyanaconda.modules.storage.constants import BootloaderMode
@@ -197,14 +198,14 @@ class RecreateInitrdsTask(Task):
         if self._payload_type == PAYLOAD_TYPE_RPM_OSTREE:
             log.debug("Don't regenerate initramfs on rpm-ostree systems.")
             return
+        if conf.bootloader.type == BootloaderType.SYSTEMD:
+            log.debug("Don't regenerate initramfs on systemd systems.")
+            return
 
-#        if self._payload_type == PAYLOAD_TYPE_SYSTEMD
-        log.debug("Don't regenerate initramfs on systemd systems.")
-
-#        recreate_initrds(
-#            sysroot=self._sysroot,
-#            kernel_versions=self._versions
-#        )
+        recreate_initrds(
+            sysroot=self._sysroot,
+            kernel_versions=self._versions
+        )
 
 
 class FixBTRFSBootloaderTask(Task):

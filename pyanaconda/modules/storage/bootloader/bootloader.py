@@ -129,6 +129,9 @@ class BootloaderModule(KickstartBaseModule):
         if data.bootloader.extlinux:
             self.set_default_type(BootloaderType.EXTLINUX)
 
+        if data.bootloader.systemd:
+            self.set_default_type(BootloaderType.SYSTEMD)
+
         if data.bootloader.bootDrive:
             self.set_drive(data.bootloader.bootDrive)
 
@@ -183,6 +186,9 @@ class BootloaderModule(KickstartBaseModule):
         """Setup the kickstart data."""
         if self.get_default_type() == BootloaderType.EXTLINUX:
             data.bootloader.extlinux = True
+
+        if self.get_default_type() == BootloaderType.SYSTEMD:
+            data.bootloader.systemd = True
 
         if self.bootloader_mode == BootloaderMode.DISABLED:
             data.bootloader.disabled = True
