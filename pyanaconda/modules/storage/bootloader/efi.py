@@ -271,6 +271,14 @@ class Aarch64EFISystemdBoot(EFISYSTEMD):
         #self._packages64 = ["shim-aa64"]
         self._packages64 = []
 
+class x64EFISystemdBoot(EFISYSTEMD):
+    _efi_binary = "\\systemd-bootx64.efi"
+
+    def __init__(self):
+        super().__init__()
+        self._packages64 = []
+
+
 
 class ArmEFIGRUB(EFIGRUB):
     _serial_consoles = ["ttyAMA", "ttyS"]
